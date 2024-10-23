@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>익명 건의 게시판</title>
+</head>
+<body>
+    <h1>익명 건의 게시판</h1>
+    <form id="suggestionForm">
+        <textarea id="suggestionInput" placeholder="건의사항을 입력하세요..." rows="4" cols="50"></textarea><br>
+        <button type="submit">제출</button>
+    </form>
+
+    <h2>건의글 목록</h2>
+    <ul id="suggestionList"></ul>
+
+    <script>
+        // API에서 건의글 목록을 가져와 표시
+        function loadSuggestions() {
+            fetch('http://127.0.0.1:5000/api/suggestions')
+                .then(response => response.json())
+                .then(data => {
+                    const suggestionList = document.getElementById('suggestionList');
+                    suggestionList.innerHTML = '';
+                    data.forEach(suggestion => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<p>${suggestion.content}</p>`;
+                        if (suggestion.response) {
+                            li.innerHTML += `<p><strong>답변:</strong> ${suggestion.response}</p>`;
+                        }
+                        suggestionList.appendChild(li);
+                    });
+                });
+        }
+
+        // 새 건의글 제출
+        document.getElementById('suggestionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const suggestionInput = document.getElementById('suggestionInput').value;
+            fetch('http://127.0.0.1:5000/api/suggestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: suggestionInput }),
+            })
+            .then(response => response.json())
+            .then(() => {
+                document.getElementById('suggestionInput').value = '';
+                loadSuggestions();
+            });
+        });
+
+        // 페이지 로드 시 건의글 목록 로드
+        window.onload = loadSuggestions;
+    </script>
+</body>
+</html>
